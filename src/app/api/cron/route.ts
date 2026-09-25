@@ -1,4 +1,6 @@
 
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 import { messagingApi } from '@line/bot-sdk';
 import prisma from '@/lib/prisma';
