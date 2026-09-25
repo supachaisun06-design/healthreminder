@@ -5,6 +5,22 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      const existingExternals = Array.isArray(config.externals)
+        ? config.externals
+        : config.externals
+        ? [config.externals]
+        : [];
+      config.externals = [
+        ...existingExternals,
+        "@line/bot-sdk",
+        "@prisma/client",
+        "@prisma/engines",
+      ];
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
