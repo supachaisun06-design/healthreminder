@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String
+  hp        Int      @default(100) // Health Points
+  exp       Int      @default(0)   // Experience Points / Streaks
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineGroups LineGroup[]
+  plans      Plan[]
+}
+
+model LineGroup {
+  id          String   @id @default(uuid())
+  lineGroupId String   @unique // ID of the group from LINE API
+  pairingCode String?  @unique // 6-digit code, null after successful pair
+  isActive    Boolean  @default(false)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
+
+enum PlanType {
+  MEDICATION
+  EXERCISE
+  MEAL
+}
+
+model Plan {
+  id           String   @id @default(uuid())
+  title        String   // e.g., "Vitamin C", "Morning Run"
+  type         PlanType
+  time         String   // format "HH:mm" (e.g., "08:00")
+  daysOfWeek   String   // format "0,1,2,3,4,5,6" (0 = Sunday)
+  isActive     Boolean  @default(true)
+  
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  
+  logs         PlanLog[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum LogStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+model PlanLog {
+  id             String    @id @default(uuid())
+  scheduledDate  DateTime  // The exact date/time this was scheduled for
+  status         LogStatus @default(PENDING)
+  
+  notifiedAt     DateTime? // When the bot sent the LINE message
+  confirmedAt    DateTime? // When the user clicked Postback
+  escalatedAt    DateTime? // When the bot tagged the Guardian
+  
+  planId         String
+  plan           Plan      @relation(fields: [planId], references: [id])
+
+  createdAt      DateTime  @default(now())
+}
